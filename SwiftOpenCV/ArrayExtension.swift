@@ -9,9 +9,9 @@
 import Foundation
 
 extension Array {
-    func combine(separator: String) -> String{
+    func combine(_ separator: String) -> String{
         var str : String = ""
-        for (idx, item) in enumerate(self) {
+        for (idx, item) in self.enumerated() {
             str += "\(item)"
             if idx < self.count-1 {
                 str += separator

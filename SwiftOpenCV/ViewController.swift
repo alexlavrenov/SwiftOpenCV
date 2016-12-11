@@ -24,103 +24,93 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         // Dispose of any resources that can be recreated.
     }
     
-    @IBAction func onTakePictureTapped(sender: AnyObject) {
-        
-        var sheet: UIActionSheet = UIActionSheet();
-        let title: String = "Please choose an option";
-        sheet.title  = title;
-        sheet.delegate = self;
-        sheet.addButtonWithTitle("Choose Picture");
-        sheet.addButtonWithTitle("Take Picture");
-        sheet.addButtonWithTitle("Cancel");
-        sheet.cancelButtonIndex = 2;
-        sheet.showInView(self.view);
-    }
-    
-    func actionSheet(sheet: UIActionSheet!, clickedButtonAtIndex buttonIndex: Int) {
-        var imagePicker = UIImagePickerController()
+    @IBAction func onTakePictureTapped(_ sender: AnyObject) {
+        let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
-        
-        switch buttonIndex{
-            
-        case 0:
-            imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+
+        let alertController = UIAlertController(title: nil, message: "Please choose an option", preferredStyle: .actionSheet)
+        let choosePictureAction = UIAlertAction(title: "Choose Picture", style: .default) { (action) in
+            imagePicker.sourceType = UIImagePickerControllerSourceType.photoLibrary
             imagePicker.allowsEditing = false
             imagePicker.delegate = self
-            self.presentViewController(imagePicker, animated: true, completion: nil)
-            break;
-        case 1:
-            imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
-            imagePicker.allowsEditing = false
-            imagePicker.delegate = self
-            self.presentViewController(imagePicker, animated: true, completion: nil)
-            break;
-        default:
-            break;
+            self.present(imagePicker, animated: true, completion: nil)
         }
+        alertController.addAction(choosePictureAction)
+        let takePictureAction = UIAlertAction(title: "Take Picture", style: .default) { (action) in
+            imagePicker.sourceType = UIImagePickerControllerSourceType.camera
+            imagePicker.allowsEditing = false
+            imagePicker.delegate = self
+            self.present(imagePicker, animated: true, completion: nil)
+        }
+        alertController.addAction(takePictureAction)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        alertController.addAction(cancelAction)
+        
+        self.present(alertController, animated: true, completion: nil)
     }
     
-    
-    @IBAction func onDetectTapped(sender: AnyObject) {
+    @IBAction func onDetectTapped(_ sender: AnyObject) {
         
-        var progressHud = MBProgressHUD.showHUDAddedTo(view, animated: true)
-        progressHud.labelText = "Detecting..."
-        progressHud.mode = MBProgressHUDModeIndeterminate
+        let progressHud = MBProgressHUD.showAdded(to: view, animated: true)
+        progressHud?.labelText = "Detecting..."
+        progressHud?.mode = MBProgressHUDModeIndeterminate
         
-        var ocr = SwiftOCR(fromImage: selectedImage)
+        let ocr = SwiftOCR(fromImage: selectedImage)
         ocr.recognize()
         
         imageView.image = ocr.groupedImage
         
-        progressHud.hide(true);
+        progressHud?.hide(true);
     }
     
-    @IBAction func onRecognizeTapped(sender: AnyObject) {
+    @IBAction func onRecognizeTapped(_ sender: AnyObject) {
         
         if((self.selectedImage) != nil){
-            var progressHud = MBProgressHUD.showHUDAddedTo(view, animated: true)
-            progressHud.labelText = "Detecting..."
-            progressHud.mode = MBProgressHUDModeIndeterminate
+            let progressHud = MBProgressHUD.showAdded(to: view, animated: true)
+            progressHud?.labelText = "Detecting..."
+            progressHud?.mode = MBProgressHUDModeIndeterminate
             
-            dispatch_async(dispatch_get_global_queue(0, 0), { () -> Void in
-                var ocr = SwiftOCR(fromImage: self.selectedImage)
+            DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async(execute: { () -> Void in
+                let ocr = SwiftOCR(fromImage: self.selectedImage)
                 ocr.recognize()
                 
-                dispatch_sync(dispatch_get_main_queue(), { () -> Void in
+                DispatchQueue.main.sync(execute: { () -> Void in
                     self.imageView.image = ocr.groupedImage
                     
-                    progressHud.hide(true);
+                    progressHud?.hide(true);
                     
-                    var dprogressHud = MBProgressHUD.showHUDAddedTo(self.view, animated: true)
-                    dprogressHud.labelText = "Recognizing..."
-                    dprogressHud.mode = MBProgressHUDModeIndeterminate
+                    let dprogressHud = MBProgressHUD.showAdded(to: self.view, animated: true)
+                    dprogressHud?.labelText = "Recognizing..."
+                    dprogressHud?.mode = MBProgressHUDModeIndeterminate
                     
-                    var text = ocr.recognizedText
+                    let text = ocr.recognizedText
                     
-                    self.performSegueWithIdentifier("ShowRecognition", sender: text);
+                    self.performSegue(withIdentifier: "ShowRecognition", sender: text);
                     
-                    dprogressHud.hide(true)
+                    dprogressHud?.hide(true)
                 })
             })
         }else {
-            var alert = UIAlertView(title: "SwiftOCR", message: "Please select image", delegate: nil, cancelButtonTitle: "Ok")
-            alert.show()
+            let alertController = UIAlertController(title: "SwiftOCR", message: "Please select image", preferredStyle: .alert)
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+            alertController.addAction(cancelAction)
+            self.present(alertController, animated: true, completion: nil)
         }
     }
     
-    func imagePickerController(picker: UIImagePickerController!, didFinishPickingImage image: UIImage!, editingInfo: NSDictionary!) {
+    func imagePickerController(_ picker: UIImagePickerController!, didFinishPickingImage image: UIImage!, editingInfo: NSDictionary!) {
         selectedImage = image;
-        picker.dismissViewControllerAnimated(true, completion: nil);
+        picker.dismiss(animated: true, completion: nil);
         imageView.image = selectedImage;
     }
     
-    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
-        picker.dismissViewControllerAnimated(true, completion: nil)
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        var vc =  segue.destinationViewController as DetailViewController
-        vc.recognizedText = sender as String!
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let vc =  segue.destination as! DetailViewController
+        vc.recognizedText = sender as! String!
     }
 }
 

@@ -49,13 +49,13 @@ class SwiftOCR {
     }
     
     init(fromImage image:UIImage) {
-        var fimage = image.fixOrientation()
+        let fimage = image.fixOrientation()
         
-        var size = CGSizeMake(fimage.size.width, fimage.size.height)
+        let size = CGSize(width: (fimage?.size.width)!, height: (fimage?.size.height)!)
         
         UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
-        fimage.drawInRect(CGRectMake(0, 0, size.width, size.height))
-       _image = UIGraphicsGetImageFromCurrentImageContext()
+        fimage?.draw(in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
+       _image = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext();
        
     
@@ -74,23 +74,23 @@ class SwiftOCR {
         
          _characterBoxes = Array<CharBox>()
         
-        var uImage = CImage(image: _image);
+        let uImage = CImage(image: _image);
         
-        var channels = uImage.channels;
+        let channels = uImage?.channels;
         
-        let classifier1 = NSBundle.mainBundle().pathForResource("trained_classifierNM1", ofType: "xml")
-        let classifier2 = NSBundle.mainBundle().pathForResource("trained_classifierNM2", ofType: "xml")
+        let classifier1 = Bundle.main.path(forResource: "trained_classifierNM1", ofType: "xml")
+        let classifier2 = Bundle.main.path(forResource: "trained_classifierNM2", ofType: "xml")
         
-        var erFilter1 = ExtremeRegionFilter.createERFilterNM1(classifier1, c: 8, x: 0.00015, y: 0.13, f: 0.2, a: true, scale: 0.1);
-        var erFilter2 = ExtremeRegionFilter.createERFilterNM2(classifier2, andX: 0.5);
+        let erFilter1 = ExtremeRegionFilter.createERFilterNM1(classifier1, c: 8, x: 0.00015, y: 0.13, f: 0.2, a: true, scale: 0.1);
+        var _ = ExtremeRegionFilter.createERFilterNM2(classifier2, andX: 0.5);
         
         var regions = Array<ExtremeRegionStat>();
         
-        var index : Int;
-        for index = 0; index < channels.count; index++ {
+//        var index : Int;
+        for index in 0..<(channels?.count)! {
             var region = ExtremeRegionStat()
             
-            region = erFilter1.run(channels[index] as UIImage);
+            region = (erFilter1?.run(channels?[index] as! UIImage))!;
             
             regions.append(region);
         }
@@ -103,24 +103,24 @@ class SwiftOCR {
         
         var texts = Array<String>();
         
-        var windex: Int
-        for windex = 0; windex < words.count; windex++ {
-            let dict = words[windex] as Dictionary<String, AnyObject>
-            let text = dict["text"]! as String
-            let confidence = dict["confidence"]! as Float
-            let box = dict["boundingbox"] as NSValue
-            if((text.utf16Count < 2 || confidence < 51) || (text.utf16Count < 4 && confidence < 60)){
+//        var windex: Int
+        for windex in 0..<(words?.count)! {
+            let dict = words?[windex] as! Dictionary<String, AnyObject>
+            let text = dict["text"]! as! String
+            let confidence = dict["confidence"]! as! Float
+            let box = dict["boundingbox"] as! NSValue
+            if((text.utf16.count < 2 || confidence < 51) || (text.utf16.count < 4 && confidence < 60)){
                 continue
             }
             
-            let rect = box.CGRectValue()
+            let rect = box.cgRectValue
             _characterBoxes.append(CharBox(text: text, rect: rect))
             texts.append(text)
         }
         
         var str : String = ""
         
-        for (idx, item) in enumerate(texts) {
+        for (idx, item) in texts.enumerated() {
             str += item
             if idx < texts.count-1 {
                 str += " "
