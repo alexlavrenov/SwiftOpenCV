@@ -779,7 +779,7 @@ void Image::findLargestStructure(std::vector<ImagePoint> *maxPoints) {
 
 int findHeightAtX(Image *img, int x) {
     // find the top most set pixel
-    bool foundTop;
+    bool foundTop = false;
     int topY=0;
     for(;topY<img->getHeight(); topY++) {
         if((*img)[topY][x]==0) {
